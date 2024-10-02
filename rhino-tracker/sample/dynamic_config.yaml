@@ -1,0 +1,9 @@
+log_dir_path: 'work/dynamic_logs'
+out_dir_path: 'work/java_call_traces'
+js_file_path: 'sample/sample.test.js'
+js_full_class_name: 'sample.test'
+instance_url: 'http://127.0.0.1:8080'
+connect_tries: 30
+connect_timeout: 120000
+time_between_connect_attempts: 10000
+compiled_js_dir_path: 'work/compiled_javascript'

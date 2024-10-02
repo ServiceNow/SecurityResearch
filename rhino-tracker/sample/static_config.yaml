@@ -1,0 +1,12 @@
+call_graph_algo: rta
+class_path: sample/build/libs/sample.jar
+entry_point_method_sig: '<com.snc.secres.sample.RhinoServlet: void doPost(jakarta.servlet.http.HttpServletRequest, jakarta.servlet.http.HttpServletResponse)>'
+main_method_sig: '<com.snc.secres.sample.DummyMain: void main(java.lang.String[])>'
+output_dir_path: work/cg
+runtime_trace_file_path: work/java_call_traces/2024-07-17_13-24-53__sample.test__.txt
+sink_method_sig: '<org.mozilla.javascript.Context: java.lang.Object evaluateString(org.mozilla.javascript.Scriptable, java.lang.String, java.lang.String, int, java.lang.Object)>'
+filter_default_policy: deny
+filter:
+  - type: class_path
+    pattern: 'com\.snc\.secres\.sample.*'
+    policy: allow
