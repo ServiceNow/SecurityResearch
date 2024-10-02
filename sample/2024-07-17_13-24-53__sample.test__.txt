@@ -1,0 +1,10 @@
+<java.time.LocalDateTime: java.time.LocalDateTime now()>
+<java.time.LocalDateTime: java.lang.String toString()>
+<java.time.LocalDateTime: java.time.LocalDateTime minusHours(long)>
+<java.time.LocalDateTime: int getDayOfYear()>
+<java.time.LocalDateTime: java.time.LocalDateTime minusDays(long)>
+<java.time.chrono.ChronoLocalDateTime: java.time.Instant toInstant(java.time.ZoneOffset)>
+<java.util.Date: java.util.Date from(java.time.Instant)>
+<java.util.Date: void <init>()>
+<java.util.Date: int compareTo(java.util.Date)>
+<java.util.Date: int compareTo(java.util.Date)>

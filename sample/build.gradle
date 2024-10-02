@@ -1,0 +1,75 @@
+/*
+ * Copyright (c) 2024 ServiceNow, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the next paragraph)
+ * shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
+plugins {
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'java'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
+}
+
+group 'com.snc.secres.sample'
+version '1'
+
+//Disable default jar build
+jar.enabled = false
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.eclipse.jetty:jetty-server:11.0.22'
+    implementation 'org.eclipse.jetty:jetty-servlet:11.0.22'
+    implementation 'jakarta.servlet:jakarta.servlet-api:6.1.0'
+    implementation 'org.mozilla:rhino:1.7.15'
+}
+
+//Reproducible builds
+tasks.withType(AbstractArchiveTask) {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
+jar {
+    manifest {
+        attributes (
+            'Main-Class': 'com.snc.secres.sample.Main'
+        )
+    }
+}
+
+shadowJar {
+    setProperty("zip64", true)
+    mergeServiceFiles()
+    mergeGroovyExtensionModules()
+    archiveClassifier.set('')
+    archiveVersion.set('')
+}
+
+assemble {
+    dependsOn "shadowJar"
+}

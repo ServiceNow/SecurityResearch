@@ -1,0 +1,244 @@
+/*
+ * Copyright (c) 2024 ServiceNow, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the next paragraph)
+ * shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
+plugins {
+    id 'java'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
+}
+
+jar.enabled = false
+
+//Reproducible builds
+tasks.withType(AbstractArchiveTask) {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
+task buildSubs {
+    subprojects.each { dependsOn("${it.name}:shadowJar") }
+}
+
+assemble {
+    dependsOn "buildSubs"
+}
+
+tasks.named("help") {
+    finalizedBy("helpDialog") 
+}
+
+clean {
+    subprojects.each { dependsOn("${it.name}:clean") }
+}
+
+def getLastArg(id, args) {
+    def ret = null
+    if(args != null && args.size() != 0) {
+        def isNext = false
+        for(String s : args) {
+            if(s.equals(id)) {
+                isNext = true
+            } else if(isNext) {
+                isNext = false
+                ret = s
+            }
+        }
+    }
+    return ret
+}
+
+def removeAll(id, size, args) {
+    def ret = new ArrayList<String>()
+    if(args != null && args.size() != 0) {
+        ret.addAll(args)
+        for(int i = args.size() - 1; i >= 0; i--) {
+            if(args[i].equals(id)) {
+                for(int j = size - 1; j >= 0; j--) {
+                    ret.remove(i+j)
+                }
+            }
+        }
+    }
+    return ret
+}
+
+def addJVMArg(jvmarguments, id, val) {
+    if(jvmarguments == null || jvmarguments.isEmpty()) {
+        jvmarguments = new ArrayList<String>()
+    } else if(jvmarguments instanceof List) {
+        jvmarguments = new ArrayList<String>(jvmarguments)
+    } else if(jvmarguments.getClass().isArray()) {
+        jvmarguments = new ArrayList<String>(Arrays.asList(jvmarguments));
+    } else {
+        jvmarguments = new ArrayList<String>(Arrays.asList(jvmarguments.split()));
+    }
+
+    def found = false
+    for(int i = 0; i < jvmarguments.size(); i++) {
+        if(jvmarguments.get(i).startsWith(id)) {
+            found = true
+        }
+    }
+    if(!found) {
+        jvmarguments.add(val)
+    }
+
+    return jvmarguments
+}
+
+//gradle runSample
+task runSample(dependsOn: buildSubs, type: JavaExec) {
+    group = "Run"
+    description = "Run the sample rhino servlet. See readme/help dialog for more infomation."
+    
+    doFirst {
+        classpath = files("${project(':sample').buildDir}/libs/${project(':sample').project.name}.jar")
+    }
+}
+
+//gradle runDynamic
+//gradle runDynamic --args='-c sample/dynamic_config.yaml'
+//gradle runDynamic -Djvmargs='-javaagent:tool/build/libs/tool.jar=sample/dynamic_config.yaml'
+task runDynamic(dependsOn: buildSubs, type: JavaExec) {
+    group = "Run"
+    description = "Run the dynamic analysis or instrumentation of the sample rhino servlet. See readme/help dialog for more infomation."
+    
+    doFirst {
+        //Get params and default paths
+        def parms = getArgs()
+        def configFilePath = getLastArg("-c", parms)
+        def runJarFilePath = "${project(':sample').buildDir}/libs/${project(':sample').project.name}.jar"
+        def agentJarFilePath = "${project(':tool').buildDir}/libs/${project(':tool').project.name}.jar"
+        classpath = files(runJarFilePath)
+
+        //Default config file to sample one if not given
+        if(configFilePath == null || configFilePath.isEmpty()) {
+            configFilePath = "${project(':sample').projectDir}/dynamic_config.yaml"
+        }
+
+        //Add javaagent if it does not already exist while keeping other jvm args
+        def jvmarguments = System.getProperty("jvmargs","")
+        jvmarguments = addJVMArg(jvmarguments, "-javaagent:", "-javaagent:" + agentJarFilePath + "=" + configFilePath)
+        jvmArgs(jvmarguments.toArray())
+    }
+}
+
+//gradle runStatic
+//gradle runStatic --args='-c sample/static_config.yaml'
+//gradle runStatic -Djvmargs='-Xms2g -Xmx4g'
+task runStatic(dependsOn: buildSubs, type: JavaExec) {
+    group = "Run"
+    description = "Run the static analysis or call graph construction using sootup. See readme/help dialog for more infomation."
+    
+    doFirst {
+        //Get params and default paths
+        def parms = getArgs()
+        def configFilePath = getLastArg("-c", parms)
+        def runJarFilePath = "${project(':tool').buildDir}/libs/${project(':tool').project.name}.jar"
+        classpath = files(runJarFilePath)
+
+        //Default config file to sample one if not given
+        if(configFilePath == null || configFilePath.isEmpty()) {
+            configFilePath = "${project(':sample').projectDir}/static_config.yaml"
+        }
+
+        //Increase memory a bit for soot up without touching any other jvm args
+        //If Xms or Xmx exists then it is not overriden
+        def jvmarguments = System.getProperty("jvmargs","")
+        jvmarguments = addJVMArg(jvmarguments, "-Xms", "-Xms2g")
+        jvmarguments = addJVMArg(jvmarguments, "-Xmx", "-Xmx4g")
+        jvmArgs(jvmarguments.toArray())
+        
+        //Remove all config file arguments and add back in our modified one
+        def newParms = removeAll("-c", 2, parms)
+        newParms.add("-c")
+        newParms.add(configFilePath)
+        setArgs(newParms)
+    }
+}
+
+task helpDialog {
+    doLast {
+        println()
+        println("------ Rhino Tracker - Java to Javascript to Java ------")
+        println()
+        println("    Rhino Tracker a proof of concept of how one might construct a call graph of")
+        println("    call flows that go from java code through the javascript interperter")
+        println("    (rhino) back to java code. Rhino Tracker uses instrumentation (via bytebuddy)")
+        println("    to capture calls that flow from a given javascript at runtime to java code.")
+        println("    It then uses sootup to construct a call graph that models the call flow from")
+        println("    java code into the rhino interperter that runs the javascript. Lastly, sootup")
+        println("    is used to substitute all outgoing call flows of the rhino interperter with")
+        println("    the javascript to java calls captured at runtime. The final output is a java")
+        println("    to javascript to java call graph.")
+        println()
+        println("  -- Build --")
+        println()
+        println("    This builds all subprojects for Rhino Tracker.")
+        println()
+        println("      gradle build")
+        println()
+        println("  -- Run Sample Servlet --")
+        println()
+        println("    Runs the sample rhino servlet. This servlet presents a webpage on")
+        println("    http://127.0.0.1:8080 where one can run any javascript through the rhino")
+        println("    interperter to get an output. This illustrates a simple program flow that a server")
+        println("    may have when running javascript with rhino.")
+        println()
+        println("      gradle runSample")
+        println("  or  java -jar sample/build/libs/sample.jar")
+        println()
+        println("  -- Run Dynamic Analysis --")
+        println()
+        println("    Runs the dynamic analysis or instrumentation of the sample rhino servlet.")
+        println("    The instrumentation and runtime capture runs without user input. However,")
+        println("    the script being run and other options such as output directory locations")
+        println("    can be configured through the config yaml file. The config yaml file can")
+        println("    be provided through the `-c` option or directly through jvmargs. See the")
+        println("    examples below. For an example config yaml file that runs the sample")
+        println("    javascript see `sample/dynamic_config.yaml`.")
+        println()
+        println("      gradle runDynamic")
+        println("  or  gradle runDynamic --args='-c sample/dynamic_config.yaml'")
+        println("  or  gradle runDynamic -Djvmargs='-javaagent:tool/build/libs/tool.jar=sample/dynamic_config.yaml'")
+        println("  or  java -javaagent:tool/build/libs/tool.jar=sample/dynamic_config.yaml -jar sample/build/libs/sample.jar")
+        println()
+        println("  -- Run Static Analysis --")
+        println()
+        println("    Runs the dynamic analysis or call graph generation using sootup. The run")
+        println("    is configured with a yaml config file which can be passed in using the")
+        println("    `-c` argument. A sample yaml config file can be found at")
+        println("    `sample/static_config.yaml`. Sootup also may require more memory than")
+        println("    normal java applications when construction the call graph. This can be")
+        println("    adjusted using the jvmargs. See below for examples on how to pass args")
+        println("    and jvm args.")
+        println()
+        println("      gradle runStatic")
+        println("  or  gradle runStatic --args='-c sample/static_config.yaml'")
+        println("  or  gradle runStatic -Djvmargs='-Xms2g -Xmx4g'")
+        println("  or  java -jar tool/build/libs/tool.jar -c sample/static_config.yaml")
+    }
+}
