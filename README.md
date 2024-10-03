@@ -52,7 +52,7 @@ git subtree pull --prefix [folder-name] [remote-name] [remote-branch] --squash
     ```
 3. Merge the commits from main into the publish branch and push the changes up to the internal repo.
     ```
-    git merge main --squash
+    git merge main --strategy-option theirs --squash
     git commit -m "merging changes"
     git push
     ```
