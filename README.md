@@ -23,3 +23,42 @@ git fetch [remote-name] [remote-branch]
 # This is will only include files from [remote-name] [remote-branch], no commits will be copied over
 git subtree pull --prefix [folder-name] [remote-name] [remote-branch] --squash
 ```
+
+## (Normal User) Publishing to the Public Repo
+
+1. Clone the internal repo using: 
+    ```
+    git clone [internal-repo-path]
+    ```
+2. Make the necessary modifications to the `main` local branch that was just cloned.
+3. Add and commit all modifications to the `main` local branch. This may have been done already if you used the subtree commands above.
+    ```
+    git add -A; git commit -m "bla"
+    ```
+4. Push all modifications to the `main` remote branch.
+    ```
+    git push
+    ```
+5. Ask an admin to merge the main branch into the publish branch and push the changes to the external repo.
+
+## (Admin) Publishing to the Public Repo
+1. Clone the internal repo using: 
+    ```
+    git clone [internal-repo-path]
+    ```
+2. Checkout the publish branch.
+    ```
+    git checkout publish
+    ```
+3. Merge the commits from main into the publish branch.
+    ```
+    ```
+4. Add the external repo as a remote and fetch its branches.
+    ```
+    git remote add publish git@github.com:ServiceNow/SecurityResearch.git
+    git fetch publish
+    ```
+5. Push the publish branch to the external repo's main branch.
+    ```
+    git push publish publish:main
+    ```
