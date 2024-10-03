@@ -50,8 +50,11 @@ git subtree pull --prefix [folder-name] [remote-name] [remote-branch] --squash
     ```
     git checkout publish
     ```
-3. Merge the commits from main into the publish branch.
+3. Merge the commits from main into the publish branch and push the changes up to the internal repo.
     ```
+    git merge main --squash
+    git commit -m "merging changes"
+    git push
     ```
 4. Add the external repo as a remote and fetch its branches.
     ```
