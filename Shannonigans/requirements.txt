@@ -1,0 +1,11 @@
+numpy
+matplotlib
+ruptures
+numba
+hilbertcurve
+umap-learn
+scikit-learn
+pandas
+seaborn
+tabulate
+plotly
