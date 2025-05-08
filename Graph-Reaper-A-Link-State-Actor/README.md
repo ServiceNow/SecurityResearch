@@ -1,5 +1,7 @@
 #  Graph Reaper: A Link-State Actor
 
+Author: Rhette Wallach
+
 This tool simulates and visualizes the training convergence of a Generative Adversarial Network (GAN) for cybersecurity applications involving AI-generated malware. It allows customization for different malware types (e.g., ransomware and trojans) and team objectives (i.e., red team for evasion amd blue team for detection). 
 For advanced users, the script can be adapted to handle actual malware datasets, providing a more realistic training environment. The script generates a dual-axis line graph showing how generator and discriminator losses evolve over epochs, helping users determine when GAN training stabilizes for their specific use case.
 

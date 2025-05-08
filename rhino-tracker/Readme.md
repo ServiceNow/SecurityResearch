@@ -1,5 +1,7 @@
 # Rhino Tracker - Java to JavaScript to Java
 
+Author: Albert Gorski
+
 Rhino Tracker is a proof of concept of how one might construct a call graph of call flows that go from Java code through the JavaScript interpreter (Rhino[^1]) back to Java code. The poc uses instrumentation (via Byte Buddy[^3]) to capture calls that flow from a given JavaScript at runtime to Java code. It then uses SootUp[^2] to construct a call graph that models the call flow from Java code into the Rhino interpreter that runs the JavaScript. Lastly, SootUp is used to substitute all outgoing call flows of the Rhino interpreter with the JavaScript to Java calls captured at runtime. The final output is a Java to JavaScript to Java call graph. More information about how Rhino Tracker was developed can be found on the *A Rhino of a Problem* blog post[^4].
 
 ## Build
