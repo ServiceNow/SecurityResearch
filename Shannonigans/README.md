@@ -1,5 +1,7 @@
 # Shannon-igans.py
 
+Author: Rhette Wallach
+
 The Shannon-igans Binary Analyzer is a Python script that performs change point
 detection and visualization on binary files using optimized Shannon entropy and
 the Ruptures library. It provides insights into the structure and composition of
