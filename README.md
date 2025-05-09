@@ -13,7 +13,7 @@ Each project added should be in its own directory. If the project being added is
 git remote add -f [remote-name] [git@remote-path.git]
 # Add the project at [remote-name] [remote-branch] to this repo under the folder [folder-name]
 # This is will only include files from [remote-name] [remote-branch], no commits will be copied over
-# To credit someone else as author of the squash commit, prefix the git subtree command with "GIT_AUTHOR_NAME="Firstname Lastname" GIT_AUTHOR_EMAIL="firstname.lastname@servicenow.com""
+# To credit someone else as author of the squash commit, prefix the git subtree command with GIT_AUTHOR_NAME="Firstname Lastname" GIT_AUTHOR_EMAIL="firstname.lastname@servicenow.com"
 git subtree add --prefix [folder-name] [remote-name] [remote-branch] --squash
 
 ## Update an existing project in this repo that was added using subtree
